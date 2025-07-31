@@ -18,7 +18,7 @@ Telegram-бот, который умеет:
 
 ---
 
-## 🚀 Быстрый запуск локально
+## Установка
 
 1. Клонируй репозиторий:
 
@@ -26,6 +26,30 @@ Telegram-бот, который умеет:
 git clone https://github.com/ZharasAT/weather-chat-bot.git
 cd weather-chat-bot
 ```
+
+2. Создай и активируй виртуальное окружение:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # для Linux/macOS
+venv/Scripts/activate     # для Windows
+```
+
+3. Установи зависимости:
+
+`pip install -r requirements.txt`
+
+4. Создай .env файл и добавь ключи:
+
+```bash
+BOT_TOKEN=your_telegram_bot_token
+WEATHER_API_KEY=your_openweathermap_api_key
+```
+
+5. Запусти бота:
+
+`python main.py`
+
 ## Как работает бот
 
 `/start` — показывает меню с выбором
@@ -48,5 +72,6 @@ cd weather-chat-bot
 BOT_TOKEN=...
 WEATHER_API_KEY=...
 ```
+
 Автор
 Разработано [https://github.com/ZharasAT](https://github.com/ZharasAT)

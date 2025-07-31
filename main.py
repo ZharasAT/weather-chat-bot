@@ -17,21 +17,20 @@ user_states = {}
 @bot.message_handler(commands=['start'])
 def start(message):
     reply_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = types.KeyboardButton("👋 Поздороваться")
-    btn2 = types.KeyboardButton("Прогноз погоды")
-    btn3 = types.KeyboardButton('Поиграть в "Камень, ножницы, бумага!"')
-    reply_markup.add(btn1, btn2, btn3)
-
+    btn1 = types.KeyboardButton("Прогноз погоды")
+    btn2 = types.KeyboardButton('Поиграть в "Камень, ножницы, бумага!"')
+    reply_markup.add(btn1, btn2)
+    reply_markup.add(types.KeyboardButton("⬅️ Главное меню"))
     inline_markup = types.InlineKeyboardMarkup(row_width=1)
     inline_markup.add(
-        types.InlineKeyboardButton("👋 Поздороваться", callback_data="greet"),
         types.InlineKeyboardButton("Прогноз погоды", callback_data="weather"),
         types.InlineKeyboardButton("Поиграть в игру", callback_data="play")
     )
 
     bot.send_message(
         message.chat.id,
-        "Привет! Я твой бот-синоптик. Пожалуйста, выбери действие:",
+        "Привет! 👋 Я твой бот-синоптик и игровой напарник!\n\n"
+        "Пожалуйста, выбери действие:",
         reply_markup=reply_markup
     )
 
@@ -51,9 +50,8 @@ def callback_handler(call):
         bot.send_message(
             call.message.chat.id,
             (
-                "Напиши мне название города **на английском языке** "
-                "(например: *Almaty*, *Paris*, *Tokyo*), "
-                "и я покажу текущую погоду.",
+                "Напиши мне название населенного пункта, "
+                "и я скажу, какая там погода.",
             ),
             parse_mode="Markdown"
         )
@@ -80,19 +78,23 @@ def handle_buttons(message):
         user_states[message.chat.id] = None
         return
 
-    elif message.text == "👋 Поздороваться":
-        bot.send_message(message.chat.id, "Привет, рад тебя видеть!")
-
     elif message.text == "Прогноз погоды":
+        user_states[message.chat.id] = "awaiting_city"
+
+        weather_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        weather_markup.add(types.KeyboardButton("⬅️ Главное меню"))
+
         bot.send_message(
             message.chat.id,
-            "Напиши мне название города, и я скажу, какая там погода."
+            "Напиши мне название населенного пункта, "
+            "и я скажу, какая там погода.",
+            reply_markup=weather_markup
         )
-        user_states[message.chat.id] = "awaiting_city"
 
     elif message.text == 'Поиграть в "Камень, ножницы, бумага!"':
         game_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         game_markup.add("Камень", "Ножницы", "Бумага")
+        game_markup.add("⬅️ Главное меню")
         bot.send_message(message.chat.id,
                          "Выбери: камень, ножницы или бумага.",
                          reply_markup=game_markup)
@@ -105,9 +107,16 @@ def handle_buttons(message):
                          f"Бот выбрал: {bot_choice.capitalize()}\n\n"
                          f"{result}")
 
+    elif message.text == "⬅️ Главное меню":
+        user_states[message.chat.id] = None
+        send_main_menu(message.chat.id)
+
     else:
-        bot.send_message(message.chat.id,
-                         "Пожалуйста, выбери вариант из меню.")
+        bot.send_message(
+            message.chat.id,
+            "Я тебя не понял 🤔\n"
+            "Нажми /start, чтобы начать сначала или выбери действие из меню."
+        )
 
 
 def determine_winner(user, bot):
@@ -137,16 +146,34 @@ def get_weather(city_name):
         wind = data["wind"]["speed"]
 
         return (
-            f"📍 Город: {city}\n"
+            f"📍 {city}\n"
             f"🌤 Погода: {weather.capitalize()}\n"
             f"🌡 Температура: {temp}°C\n"
             f"💧 Влажность: {humidity}%\n"
             f"🌬 Ветер: {wind} м/с"
         )
     elif response.status_code == 404:
-        return "⚠️ Город не найден. Попробуй ввести название ещё раз."
+        return (
+            "⚠️ Населенный пункт не найден. "
+            "Попробуй ввести название ещё раз."
+        )
+
     else:
         return "❌ Ошибка при получении погоды."
+
+
+def send_main_menu(chat_id):
+    reply_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton("Прогноз погоды")
+    btn2 = types.KeyboardButton('Поиграть в "Камень, ножницы, бумага!"')
+    reply_markup.add(btn1, btn2)
+    reply_markup.add(types.KeyboardButton("⬅️ Главное меню"))
+
+    bot.send_message(
+        chat_id,
+        "🔙 Возврат в главное меню. Пожалуйста, выбери действие:",
+        reply_markup=reply_markup
+    )
 
 
 bot.polling(none_stop=True, interval=0)
